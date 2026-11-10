@@ -1,6 +1,6 @@
 ---
 name: hotel-search
-description: Search and compare hotels with the Ktemia hotel API and return each seller's price, a booking link, and guest reviews. Use when the user asks to find, compare, or price a stay in a city on specific dates, or to read reviews of a hotel. Asks for missing details instead of guessing.
+description: Search and compare hotels with the Ktemia hotel API and return each seller's price, a booking link, and guest reviews. Use when the user asks to find, compare, or price a stay in a city on specific dates, to narrow prices to one booking site, or to read reviews of a hotel. Asks for missing details instead of guessing.
 ---
 
 # Hotel search with the Ktemia API
@@ -41,6 +41,8 @@ python3 scripts/ktemia.py search --location 29230 --checkin 2027-03-10 --checkou
 
 Other options: `--child-ages 4,7` (one age per child, 0–17, at most 8; send it only when the user named children), `--min-rating 6|7|8|9`, `--max-price N` (before-tax stay price, whole number), `--free-cancellation`, `--amenities pool` (ids from `availableFilters` on a previous results page), `--country GB`.
 
+`--providers` narrows a search to named booking sites. It needs ids from a previous results page, so it belongs on a **second** search — see "Filter by booking site" below. Do not guess the ids.
+
 `country` picks the market. Prices come back in that country's native currency: GB is GBP, DE is EUR, US is USD. Omit it for the US. Do not send a currency field.
 
 `sort` is `bestValue` (default), `price`, `rating`, `stars`, or `distance`. `--sort-order` changes `price` and `stars` only. `asc` is cheapest, or fewest stars, first. Rating is always highest first. Distance is always nearest first.
@@ -57,7 +59,25 @@ Up to 30 hotels per page. The first page is often a few short of 30. Show a shor
 
 `availableFilters` on the full response (`--raw`) lists amenity ids you can send on a new search. Ask the user before starting that second search.
 
-### 4. Booking links for one hotel
+The summary also lists `bookingSites`: the sites selling stays in this search, each with a count. Those ids are what `--providers` takes.
+
+### 4. Filter by booking site
+
+When the user wants one site ("only Booking.com", "compare Expedia and Agoda"), read the ids off a results page and start a **new** search with them. A filter cannot be applied to an existing token.
+
+```bash
+python3 scripts/ktemia.py search --location 29230 --checkin 2027-03-10 --checkout 2027-03-12 --providers "Booking.com"
+python3 scripts/ktemia.py search --location 29230 --checkin 2027-03-10 --checkout 2027-03-12 --providers "Booking.com,Expedia"
+```
+
+- Ids are display names with capitals and dots: `Booking.com`, `Expedia`, `Hotels.com`, `Priceline`, `Agoda.com`, `Trip.com`, `Super.com`, `HomeToGo`.
+- Take them from `bookingSites` on a results page, exactly as written — matching is case-sensitive, unlike `--amenities` which is lowercased. Separate with commas only, so an id containing a space is fine.
+- Up to 10. An id with `,`, `;`, or `=` in it is rejected.
+- Which sites appear changes by city and date, so **read the ids rather than hard-coding them**. Tell the user this is a second search against their quota, and ask first.
+
+With two or more sites, `bestOption` on each hotel is the cheapest among them, and `details` lists only those sites. `availableFilters.bookingSites` still lists every site in the search, so the user can switch with another search. Narrowing can return nothing, which is a real `NO_RESULTS` — report it instead of retrying.
+
+### 5. Booking links for one hotel
 
 ```bash
 python3 scripts/ktemia.py details <searchToken> <hotel id>
@@ -65,7 +85,7 @@ python3 scripts/ktemia.py details <searchToken> <hotel id>
 
 Each option includes `providerUrl`, the seller's booking page. Give the user the link as returned; do not edit the query string. A null URL means that seller did not resolve. `reviews` on this call is up to five recent guest reviews. Make clear they book on the seller's site, and that prices can change after the search.
 
-### 5. More reviews
+### 6. More reviews
 
 Reviews need the hotel id and no search token. The id is `id` from results, or `hotelId` from a location whose type is `hotel`.
 
@@ -101,6 +121,10 @@ curl "https://api.ktemia.com/hotels/locations?query=London" -H "X-API-Key: $KTEM
 curl https://api.ktemia.com/hotels/search \
   -H "X-API-Key: $KTEMIA_API_KEY" -H "Content-Type: application/json" \
   -d '{"location": "29230", "checkin": "2027-03-10", "checkout": "2027-03-12"}'
+
+curl https://api.ktemia.com/hotels/search \
+  -H "X-API-Key: $KTEMIA_API_KEY" -H "Content-Type: application/json" \
+  -d '{"location": "29230", "checkin": "2027-03-10", "checkout": "2027-03-12", "providers": ["Booking.com"]}'
 
 curl "https://api.ktemia.com/hotels/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/hotels/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"

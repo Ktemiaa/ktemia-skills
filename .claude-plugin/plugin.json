@@ -1,8 +1,8 @@
 {
   "name": "ktemia",
   "displayName": "Ktemia",
-  "version": "0.2.0",
-  "description": "Search and compare flights, rental cars, and hotels with the Ktemia API. Each skill looks up the place, runs the search, and returns seller prices with booking links. Hotel reviews are included.",
+  "version": "0.3.0",
+  "description": "Search and compare flights, rental cars, and hotels with the Ktemia API. Each skill looks up the place, runs the search, and returns seller prices with booking links. Cars and hotels can be narrowed to named booking sites or rental agencies. Hotel reviews are included.",
   "author": {
     "name": "Ktemia",
     "email": "contact@ktemia.com",

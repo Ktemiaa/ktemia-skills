@@ -3,6 +3,7 @@
 
     ktemia.py locations QUERY [--country CC]
     ktemia.py search --location LOCATION_ID --checkin YYYY-MM-DD --checkout YYYY-MM-DD
+                     [--providers "Booking.com,Expedia"]
     ktemia.py results TOKEN
     ktemia.py details TOKEN RESULT_ID
     ktemia.py reviews HOTEL_ID [--page N]
@@ -73,7 +74,7 @@ def summarize_results(page):
             "total": money(best.get("totalPrice")),
             "seller": best.get("provider"),
         })
-    return {
+    summary = {
         "page": page.get("page"),
         "totalResults": page.get("totalResults"),
         "hasMore": page.get("hasMore"),
@@ -81,7 +82,12 @@ def summarize_results(page):
         "destination": (page.get("destination") or {}).get("name"),
         "hotels": hotels,
     }
-
+    # Surfaced so a follow-up search can filter by seller without re-reading
+    # the whole page with --raw.
+    sites = filter_ids((page.get("availableFilters") or {}).get("bookingSites"))
+    if sites:
+        summary["bookingSites"] = sites
+    return summary
 
 def summarize_details(details):
     reviews = details.get("reviews") or {}
@@ -144,6 +150,35 @@ def ints(value):
     return [int(part) for part in value.split(",") if part.strip()]
 
 
+def id_list(value):
+    """Split a comma-separated filter-id option into the list the API wants.
+
+    Booking-site ids are display names taken straight from `availableFilters`,
+    so they can contain spaces and dots ("Booking.com", "Trip.com"). Only the
+    comma is a separator, and case is preserved: the API matches these ids
+    exactly, unlike amenity ids which are lowercased.
+    """
+    if not value:
+        return None
+    ids = [part.strip() for part in value.split(",") if part.strip()]
+    return ids or None
+
+
+def filter_ids(section, limit=12):
+    """Compact `id (count)` view of one availableFilters facet.
+
+    Hotel facets are objects wrapping an ``options`` list, unlike the cars API
+    where the facet is the list itself.
+    """
+    if not isinstance(section, dict):
+        return None
+    out = []
+    for item in section.get("options") or []:
+        if isinstance(item, dict) and item.get("id"):
+            out.append({"id": item["id"], "count": item.get("count")})
+    return out[:limit] or None
+
+
 def search_body(args):
     body = {
         "location": args.location,
@@ -159,6 +194,7 @@ def search_body(args):
         "maxPrice": args.max_price,
         "freeCancellation": True if args.free_cancellation else None,
         "amenities": [part.strip().lower() for part in args.amenities.split(",")] if args.amenities else None,
+        "providers": id_list(args.providers),
         "sortBy": args.sort,
         "sortOrder": args.sort_order,
         "country": args.country,
@@ -187,6 +223,7 @@ def main():
     p.add_argument("--max-price", type=int, help="before-tax stay price, whole number")
     p.add_argument("--free-cancellation", action="store_true")
     p.add_argument("--amenities", help="comma-separated amenity ids, for example pool")
+    p.add_argument("--providers", help="comma-separated booking-site ids from availableFilters.bookingSites, for example 'Booking.com,Expedia'. Up to 10")
     p.add_argument("--sort", choices=["bestValue", "price", "rating", "stars", "distance"])
     p.add_argument("--sort-order", choices=["asc", "desc"])
     p.add_argument("--country", help="market country code such as GB; prices come back in that country's native currency")

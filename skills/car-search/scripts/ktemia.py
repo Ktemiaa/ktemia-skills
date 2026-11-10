@@ -3,6 +3,7 @@
 
     ktemia.py locations QUERY [--type city|airport|all] [--country CC]
     ktemia.py search --pickup LOCATION_ID --pickup-date YYYY-MM-DD --dropoff-date YYYY-MM-DD
+                     [--providers "Booking.com,Expedia"] [--agencies avis,hertz]
     ktemia.py results TOKEN
     ktemia.py details TOKEN RESULT_ID
 
@@ -49,6 +50,21 @@ def money(block):
     return block.get("formatted") or block.get("amount")
 
 
+def filter_ids(items, limit=12):
+    """Compact `id (count)` view of one availableFilters facet.
+
+    Both facets arrive as a list of objects on cars. Only the ids are kept:
+    they are what a follow-up search sends back as --providers / --agencies.
+    """
+    if not isinstance(items, list):
+        return None
+    out = []
+    for item in items:
+        if isinstance(item, dict) and item.get("id"):
+            out.append({"id": item["id"], "count": item.get("count")})
+    return out[:limit] or None
+
+
 def summarize_results(page):
     cars = []
     for car in page.get("cars", []):
@@ -66,12 +82,22 @@ def summarize_results(page):
             "perDay": money(best.get("perDay")),
             "sellers": car.get("optionCount"),
         })
-    return {
+    filters = page.get("availableFilters") or {}
+    summary = {
         "page": page.get("page"),
         "totalResults": page.get("totalResults"),
         "nextToken": page.get("nextToken"),
         "cars": cars,
     }
+    # Surfaced so a follow-up search can filter by seller or agency without
+    # re-reading the whole page with --raw.
+    sites = filter_ids(filters.get("bookingSites"))
+    agencies = filter_ids(filters.get("agency"))
+    if sites:
+        summary["bookingSites"] = sites
+    if agencies:
+        summary["agencies"] = agencies
+    return summary
 
 
 def summarize_details(details):
@@ -85,6 +111,19 @@ def summarize_details(details):
             "providerUrl": option.get("providerUrl"),
         })
     return {"resultId": details.get("resultId"), "bookingOptions": options}
+
+
+def id_list(value):
+    """Split a comma-separated filter-id option into the list the API wants.
+
+    Ids are display names taken straight from `availableFilters`, so they can
+    contain spaces and dots ("Auto Europe", "Booking.com"). Only the comma is a
+    separator, and case is preserved: the API matches these ids exactly.
+    """
+    if not value:
+        return None
+    ids = [part.strip() for part in value.split(",") if part.strip()]
+    return ids or None
 
 
 def search_body(args):
@@ -101,6 +140,8 @@ def search_body(args):
         "carClass": args.car_class,
         "transmission": args.transmission,
         "maxPrice": args.max_price,
+        "providers": id_list(args.providers),
+        "agencies": id_list(args.agencies),
         "sortBy": args.sort,
         "sortOrder": args.sort_order,
         "priceMode": args.price_mode,
@@ -130,6 +171,8 @@ def main():
     p.add_argument("--class", dest="car_class", choices=["small", "medium", "large", "suv", "van", "pickup", "luxury", "convertible"])
     p.add_argument("--transmission", choices=["automatic", "manual"])
     p.add_argument("--max-price", type=int, help="whole number in the country's native currency")
+    p.add_argument("--providers", help="comma-separated booking-site ids from availableFilters.bookingSites, for example 'Booking.com,Expedia'. Up to 10")
+    p.add_argument("--agencies", help="comma-separated agency ids from availableFilters.agency, for example 'avis,hertz'. Up to 10")
     p.add_argument("--sort", choices=["bestValue", "price", "rating", "distance"])
     p.add_argument("--sort-order", choices=["asc", "desc"])
     p.add_argument("--price-mode", choices=["total", "perDay"])

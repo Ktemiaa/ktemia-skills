@@ -8,7 +8,7 @@ Agent skills that search and compare flights, rental cars, and hotels with the [
 | `car-search`    | A hire at a city or airport               | [Cars](https://www.ktemia.com/docs/api/cars/search/)       |
 | `hotel-search`  | A stay, plus guest reviews                | [Hotels](https://www.ktemia.com/docs/api/hotels/search/)   |
 
-Each skill asks when a place or a date is missing, instead of guessing. Ktemia compares prices. It does not book the ticket, the car, or the room. The traveller books on the seller's site.
+Each skill asks when a place or a date is missing, instead of guessing. Cars and hotels can also be narrowed to named booking sites, and cars to named rental agencies. Ktemia compares prices. It does not book the ticket, the car, or the room. The traveller books on the seller's site.
 
 ## Install
 
@@ -85,7 +85,11 @@ How to get a key, and the plan limits, are on [authentication](https://www.ktemi
 
 > Hire a car at Lisbon airport, 10–17 March, automatic.
 
+> Hire a car in Austin next month, but only from Avis or Hertz.
+
 > A hotel in London for two, 10–12 March, with free cancellation if you can find it. Then show recent reviews for the one I pick.
+
+> A London hotel for that weekend, priced on Booking.com only.
 
 ## Use the clients directly
 
@@ -97,13 +101,17 @@ python3 skills/flight-search/scripts/ktemia.py search --origin LIS --destination
 
 python3 skills/car-search/scripts/ktemia.py locations "Lisbon" --type airport
 python3 skills/car-search/scripts/ktemia.py search --pickup LOCATION_ID --pickup-date 2027-03-10 --dropoff-date 2027-03-17
+python3 skills/car-search/scripts/ktemia.py search --pickup LOCATION_ID --pickup-date 2027-03-10 --dropoff-date 2027-03-17 --agencies avis,hertz
 
 python3 skills/hotel-search/scripts/ktemia.py locations "London"
 python3 skills/hotel-search/scripts/ktemia.py search --location LOCATION_ID --checkin 2027-03-10 --checkout 2027-03-12
+python3 skills/hotel-search/scripts/ktemia.py search --location LOCATION_ID --checkin 2027-03-10 --checkout 2027-03-12 --providers "Booking.com"
 python3 skills/hotel-search/scripts/ktemia.py reviews HOTEL_ID
 ```
 
 `results` and `details` take the `searchToken` the search command prints. Pass a hotel id to `reviews`; that call does not need a token.
+
+`--providers` (cars and hotels) and `--agencies` (cars) keep only the sellers you name, up to 10 each. The ids come from `bookingSites` and `agencies` on a results page and are matched exactly, so read them from a first search rather than hard-coding them — booking-site ids carry capitals and dots (`Booking.com`), car agency ids are lowercase (`avis`).
 
 ## Learn more
 

@@ -1,6 +1,6 @@
 ---
 name: car-search
-description: Search and compare rental cars with the Ktemia car search API and return each seller's price with a booking link. Use when the user asks to hire, rent, or compare a car at a city or airport on specific dates. Asks for missing details instead of guessing.
+description: Search and compare rental cars with the Ktemia car search API and return each seller's price with a booking link. Use when the user asks to hire, rent, or compare a car at a city or airport on specific dates, including narrowing to one rental agency or booking site. Asks for missing details instead of guessing.
 ---
 
 # Car search with the Ktemia API
@@ -43,6 +43,8 @@ python3 scripts/ktemia.py search --pickup 29230 --dropoff 174457 --pickup-date 2
 
 Other options: `--driver-age 30` (18–99; send it only when the user gave an age), `--class small|medium|large|suv|van|pickup|luxury|convertible`, `--max-price N` (whole number in the country's currency), `--price-mode total|perDay` (default `total`, the price for the whole hire), `--country GB`.
 
+`--providers` and `--agencies` narrow a search to named sellers. Both need ids from a previous results page, so they belong on a **second** search — see "Filter by seller or agency" below. Do not guess the ids.
+
 `country` picks the market. Prices come back in that country's native currency: GB is GBP, DE is EUR, US is USD. Omit it for the US. Do not send a currency field.
 
 `sort` is `bestValue` (default), `price`, `rating`, or `distance`. `--sort-order` changes `price` only: `asc` is cheapest first, `desc` is dearest first. Rating is always highest first. Distance is always nearest first.
@@ -57,7 +59,26 @@ python3 scripts/ktemia.py results <searchToken>
 
 Up to 20 cars per page. Show the user a short list: car, class, passengers, agency, and price. `price` is the hire total. `perDay` is the daily price. If `nextToken` is present and the user wants more, call `results <nextToken>`.
 
-### 4. Booking links for one car
+The summary also lists `bookingSites` and `agencies`: the sellers and rental companies in this search, each with a count. Those ids are what `--providers` and `--agencies` take.
+
+### 4. Filter by seller or agency
+
+When the user wants one company ("only Avis", "book through Expedia, not the agency"), read the ids off a results page and start a **new** search with them. A filter cannot be applied to an existing token.
+
+```bash
+python3 scripts/ktemia.py search --pickup 22863 --pickup-date 2027-03-10 --dropoff-date 2027-03-17 --agencies avis,hertz
+python3 scripts/ktemia.py search --pickup 22863 --pickup-date 2027-03-10 --dropoff-date 2027-03-17 --providers "Booking.com,Expedia"
+```
+
+- `--agencies` is the company whose car it is. Ids are lowercase: `avis`, `hertz`, `enterprise`, `budget`, `alamo`, `dollar`, `europcar`, `fox`.
+- `--providers` is the site selling it. Ids are display names with capitals and dots: `Booking.com`, `Expedia`, `Avis`, `Auto Europe`, `DiscoverCars.com`.
+- Take both from `bookingSites` and `agencies` on a results page, exactly as written — matching is case-sensitive. Separate with commas only, so an id containing a space is fine: `--providers "Auto Europe,Car Rental 8"`.
+- Up to 10 each. An id with `,`, `;`, or `=` in it is rejected.
+- Which sellers appear changes by city and date, so **read the ids rather than hard-coding them**. Tell the user this is a second search against their quota, and ask first.
+
+Both filters can be sent together. Narrowing can return nothing, which is a real `NO_RESULTS` — report it instead of retrying.
+
+### 5. Booking links for one car
 
 ```bash
 python3 scripts/ktemia.py details <searchToken> <car id>
@@ -87,6 +108,10 @@ curl "https://api.ktemia.com/cars/locations?query=Lisbon" -H "X-API-Key: $KTEMIA
 curl https://api.ktemia.com/cars/search \
   -H "X-API-Key: $KTEMIA_API_KEY" -H "Content-Type: application/json" \
   -d '{"pickupLocation": "29230", "pickupDate": "2027-03-10", "dropoffDate": "2027-03-17"}'
+
+curl https://api.ktemia.com/cars/search \
+  -H "X-API-Key: $KTEMIA_API_KEY" -H "Content-Type: application/json" \
+  -d '{"pickupLocation": "29230", "pickupDate": "2027-03-10", "dropoffDate": "2027-03-17", "agencies": ["avis"], "providers": ["Booking.com"]}'
 
 curl "https://api.ktemia.com/cars/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/cars/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
