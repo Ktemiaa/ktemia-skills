@@ -1,6 +1,22 @@
 ---
 name: car-search
 description: Search and compare rental cars with the Ktemia car search API and return each seller's price with a booking link. Use when the user asks to hire, rent, or compare a car at a city or airport on specific dates, including narrowing to one rental agency or booking site. Asks for missing details instead of guessing.
+version: 0.3.0
+metadata:
+  openclaw:
+    emoji: "🚗"
+    homepage: https://www.ktemia.com/docs/api/cars/search/
+    requires:
+      env: [KTEMIA_API_KEY]
+      anyBins: [python3, python]
+    primaryEnv: KTEMIA_API_KEY
+    envVars:
+      - name: KTEMIA_API_KEY
+        required: true
+        description: Ktemia API key from https://app.ktemia.com (Free plan includes 100 requests a month).
+      - name: KTEMIA_API_URL
+        required: false
+        description: Override the API base URL. Defaults to https://api.ktemia.com.
 ---
 
 # Car search with the Ktemia API
@@ -116,3 +132,11 @@ curl https://api.ktemia.com/cars/search \
 curl "https://api.ktemia.com/cars/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/cars/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
 ```
+
+## Further reading
+
+Background for the user. You do not need these to run a search, so don't open them unless the user asks.
+
+- [Car rental API: compare vehicles and prices for a pickup](https://www.ktemia.com/blog/car-rental-api/)
+- [Car rental aggregator API: search multiple providers in one call](https://www.ktemia.com/blog/car-rental-aggregator-api/)
+- [How to compare car rental deals across providers and locations](https://www.ktemia.com/blog/compare-car-rental-deals/)

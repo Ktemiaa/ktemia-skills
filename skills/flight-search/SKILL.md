@@ -1,6 +1,22 @@
 ---
 name: flight-search
 description: Search and compare flights with the Ktemia flight search API - one-way, round trip, or multi-city - and return fares from each seller with booking links. Use when the user asks to find, compare, or price flights between places on specific dates, or to look up an airport or city code. Asks for missing details instead of guessing.
+version: 0.3.0
+metadata:
+  openclaw:
+    emoji: "✈️"
+    homepage: https://www.ktemia.com/docs/api/flights/search/
+    requires:
+      env: [KTEMIA_API_KEY]
+      anyBins: [python3, python]
+    primaryEnv: KTEMIA_API_KEY
+    envVars:
+      - name: KTEMIA_API_KEY
+        required: true
+        description: Ktemia API key from https://app.ktemia.com (Free plan includes 100 requests a month).
+      - name: KTEMIA_API_URL
+        required: false
+        description: Override the API base URL. Defaults to https://api.ktemia.com.
 ---
 
 # Flight search with the Ktemia API
@@ -101,3 +117,14 @@ curl https://api.ktemia.com/flights/search \
 curl "https://api.ktemia.com/flights/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/flights/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
 ```
+
+## Further reading
+
+Background for the user. You do not need these to run a search, so don't open them unless the user asks.
+
+- [Google Flights API: there isn't an official one](https://www.ktemia.com/blog/google-flights-api/)
+- [Amadeus API vs Skyscanner API for flight search](https://www.ktemia.com/blog/amadeus-api-vs-skyscanner-api/)
+- [Flight search API: compare fares for a route](https://www.ktemia.com/blog/flight-search-api/)
+- [Kiwi Tequila API flights documentation](https://www.ktemia.com/blog/kiwi-tequila-api/)
+- [Flight aggregator API: search multiple providers in one call](https://www.ktemia.com/blog/flight-aggregator-api/)
+- [Flight price comparison data: 1,703 flights across 57 booking sites](https://www.ktemia.com/blog/flight-price-spread/)
