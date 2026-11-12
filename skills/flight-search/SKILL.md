@@ -1,7 +1,8 @@
 ---
 name: flight-search
 description: Search and compare flights with the Ktemia flight search API - one-way, round trip, or multi-city - and return fares from each seller with booking links. Use when the user asks to find, compare, or price flights between places on specific dates, or to look up an airport or city code. Asks for missing details instead of guessing.
-version: 0.3.0
+version: 1.0.1
+allowed-tools: Bash(python3 scripts/ktemia.py:*)
 metadata:
   openclaw:
     emoji: "✈️"
@@ -16,7 +17,7 @@ metadata:
         description: Ktemia API key from https://app.ktemia.com (Free plan includes 100 requests a month).
       - name: KTEMIA_API_URL
         required: false
-        description: Override the API base URL. Defaults to https://api.ktemia.com.
+        description: Optional. Override the API base URL; must be https on ktemia.com, anything else is refused. Defaults to https://api.ktemia.com.
 ---
 
 # Flight search with the Ktemia API
@@ -117,6 +118,12 @@ curl https://api.ktemia.com/flights/search \
 curl "https://api.ktemia.com/flights/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/flights/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
 ```
+
+## Security
+
+- The API key is read from `KTEMIA_API_KEY` and sent only as the `X-API-Key` header, over HTTPS, to `https://api.ktemia.com`.
+- `scripts/ktemia.py` refuses any `KTEMIA_API_URL` that is not `https://` on `ktemia.com`, and never follows redirects, so the key cannot reach another host.
+- The script uses the Python standard library only. It reads no files and writes nothing to disk.
 
 ## Further reading
 

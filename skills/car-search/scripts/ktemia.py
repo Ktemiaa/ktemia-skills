@@ -18,7 +18,29 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API = os.environ.get("KTEMIA_API_URL", "https://api.ktemia.com")
+DEFAULT_API = "https://api.ktemia.com"
+
+
+def api_base():
+    """Return the API base URL. The key is only ever sent over HTTPS to ktemia.com."""
+    url = (os.environ.get("KTEMIA_API_URL") or DEFAULT_API).strip().rstrip("/")
+    parts = urllib.parse.urlsplit(url)
+    host = (parts.hostname or "").lower()
+    trusted = host == "ktemia.com" or host.endswith(".ktemia.com")
+    if parts.scheme != "https" or not trusted or parts.username or parts.password or parts.query or parts.fragment:
+        sys.exit("KTEMIA_API_URL must be an https:// URL on ktemia.com. Unset it to use " + DEFAULT_API + ".")
+    return url
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never follow a redirect, so the X-API-Key header cannot be forwarded to another host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, "Redirect refused (the API key is only sent to the API host)", headers, fp)
+
+
+API = api_base()
+OPENER = urllib.request.build_opener(NoRedirect)
 
 
 def call(method, path, params=None, body=None):
@@ -33,7 +55,7 @@ def call(method, path, params=None, body=None):
     if data is not None:
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, timeout=120) as res:
+        with OPENER.open(req, timeout=120) as res:
             return json.load(res)
     except urllib.error.HTTPError as err:
         try:

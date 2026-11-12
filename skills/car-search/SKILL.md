@@ -1,7 +1,8 @@
 ---
 name: car-search
 description: Search and compare rental cars with the Ktemia car search API and return each seller's price with a booking link. Use when the user asks to hire, rent, or compare a car at a city or airport on specific dates, including narrowing to one rental agency or booking site. Asks for missing details instead of guessing.
-version: 0.3.0
+version: 1.0.1
+allowed-tools: Bash(python3 scripts/ktemia.py:*)
 metadata:
   openclaw:
     emoji: "🚗"
@@ -16,7 +17,7 @@ metadata:
         description: Ktemia API key from https://app.ktemia.com (Free plan includes 100 requests a month).
       - name: KTEMIA_API_URL
         required: false
-        description: Override the API base URL. Defaults to https://api.ktemia.com.
+        description: Optional. Override the API base URL; must be https on ktemia.com, anything else is refused. Defaults to https://api.ktemia.com.
 ---
 
 # Car search with the Ktemia API
@@ -132,6 +133,12 @@ curl https://api.ktemia.com/cars/search \
 curl "https://api.ktemia.com/cars/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/cars/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
 ```
+
+## Security
+
+- The API key is read from `KTEMIA_API_KEY` and sent only as the `X-API-Key` header, over HTTPS, to `https://api.ktemia.com`.
+- `scripts/ktemia.py` refuses any `KTEMIA_API_URL` that is not `https://` on `ktemia.com`, and never follows redirects, so the key cannot reach another host.
+- The script uses the Python standard library only. It reads no files and writes nothing to disk.
 
 ## Further reading
 
