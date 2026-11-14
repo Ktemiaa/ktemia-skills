@@ -1,7 +1,7 @@
 ---
 name: hotel-search
 description: Search and compare hotels with the Ktemia hotel API and return each seller's price, a booking link, and guest reviews. Use when the user asks to find, compare, or price a stay in a city on specific dates, to narrow prices to one booking site, or to read reviews of a hotel. Asks for missing details instead of guessing.
-version: 1.0.1
+version: 1.0.2
 allowed-tools: Bash(python3 scripts/ktemia.py:*)
 metadata:
   openclaw:
@@ -161,3 +161,4 @@ Background for the user. You do not need these to run a search, so don't open th
 - [Booking.com API: search is not the reservation](https://www.ktemia.com/blog/booking-com-api/)
 - [Expedia API alternative: compare without the partner gate](https://www.ktemia.com/blog/expedia-api-alternative/)
 - [Hotel price API: every booking site in one call](https://www.ktemia.com/blog/hotel-price-api/)
+- [Best travel API in 2026: access gates, coverage, and what each one returns](https://www.ktemia.com/blog/best-travel-api/)
