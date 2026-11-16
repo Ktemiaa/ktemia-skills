@@ -6,6 +6,7 @@
                      [--providers "Booking.com,Expedia"] [--agencies avis,hertz]
     ktemia.py results TOKEN
     ktemia.py details TOKEN RESULT_ID
+    ktemia.py quota
 
 Reads the API key from KTEMIA_API_KEY. Prints JSON. Exits 1 on an API error.
 Reference: https://www.ktemia.com/docs/api/cars/search/
@@ -209,6 +210,8 @@ def main():
     p.add_argument("result_id")
     p.add_argument("--raw", action="store_true", help="print the full response")
 
+    sub.add_parser("quota", help="plan, limits and requests left this month; costs no quota")
+
     args = parser.parse_args()
     if args.command == "locations":
         out = call("GET", "/cars/locations", {
@@ -216,6 +219,8 @@ def main():
             "type": args.location_type,
             "country": args.country,
         })
+    elif args.command == "quota":
+        out = call("GET", "/key")
     elif args.command == "search":
         out = call("POST", "/cars/search", body=search_body(args))
     elif args.command == "results":

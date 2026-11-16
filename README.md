@@ -115,6 +115,9 @@ python3 skills/hotel-search/scripts/ktemia.py locations "London"
 python3 skills/hotel-search/scripts/ktemia.py search --location LOCATION_ID --checkin 2027-03-10 --checkout 2027-03-12
 python3 skills/hotel-search/scripts/ktemia.py search --location LOCATION_ID --checkin 2027-03-10 --checkout 2027-03-12 --providers "Booking.com"
 python3 skills/hotel-search/scripts/ktemia.py reviews HOTEL_ID
+
+# Plan, rate limits, and requests left this month. Costs no quota.
+python3 skills/flight-search/scripts/ktemia.py quota
 ```
 
 `results` and `details` take the `searchToken` the search command prints. Pass a hotel id to `reviews`; that call does not need a token.

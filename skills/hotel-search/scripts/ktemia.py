@@ -7,6 +7,7 @@
     ktemia.py results TOKEN
     ktemia.py details TOKEN RESULT_ID
     ktemia.py reviews HOTEL_ID [--page N]
+    ktemia.py quota
 
 Reads the API key from KTEMIA_API_KEY. Prints JSON. Exits 1 on an API error.
 Reference: https://www.ktemia.com/docs/api/hotels/search/
@@ -269,9 +270,13 @@ def main():
     p.add_argument("--page", type=int)
     p.add_argument("--raw", action="store_true", help="print the full response")
 
+    sub.add_parser("quota", help="plan, limits and requests left this month; costs no quota")
+
     args = parser.parse_args()
     if args.command == "locations":
         out = call("GET", "/hotels/locations", {"query": args.query, "country": args.country})
+    elif args.command == "quota":
+        out = call("GET", "/key")
     elif args.command == "search":
         out = call("POST", "/hotels/search", body=search_body(args))
     elif args.command == "results":

@@ -1,7 +1,7 @@
 ---
 name: flight-search
 description: Search and compare flights with the Ktemia flight search API - one-way, round trip, or multi-city - and return fares from each seller with booking links. Use when the user asks to find, compare, or price flights between places on specific dates, or to look up an airport or city code. Asks for missing details instead of guessing.
-version: 1.0.2
+version: 1.1.0
 allowed-tools: Bash(python3 scripts/ktemia.py:*)
 metadata:
   openclaw:
@@ -32,6 +32,20 @@ API reference: https://www.ktemia.com/docs/api/
 2. You need three things from the user: where from, where to, and the departure date. For a round trip, also the return date.
 3. **Do not guess.** If any of these is missing or vague ("soon", "somewhere warm", "Europe"), ask. Every API call counts against the user's monthly quota, so a guessed search wastes it.
 4. Dates are `YYYY-MM-DD` and must be today or later. Resolve "next Friday" into a date and confirm it with the user if there is any doubt.
+
+## Checking the budget
+
+`python3 scripts/ktemia.py quota` prints the plan, the rate limits, and how many requests are left this month. It is the one call that does not count against the quota, so it is safe before a search and it still answers after the allowance is gone.
+
+```bash
+python3 scripts/ktemia.py quota
+# -> {"plan": {"name": "free", "monthlyQuota": 100, ...},
+#     "usage": {"used": 37, "remaining": 63, "scope": "account"}, "metered": false}
+```
+
+Worth knowing what a request costs. A search is two calls (search, then results), a code lookup is one, and booking links are one more, so answering a question properly usually spends three to five. The Free plan's 100 a month is roughly 20 to 30 searches. A `scope` of `account` means every key the user holds draws on this same allowance.
+
+Check it when the user asks how much they have left, or before a run of searches that might exhaust a small plan. Do not poll it between every call: it is unmetered, not unlimited, and it takes a token from the same rate limiter as everything else.
 
 ## Workflow
 
@@ -100,7 +114,8 @@ The script prints the API error and exits non-zero. Common codes:
 - `NO_RESULTS` (404): nothing published for that route and date. Suggest nearby dates or airports, and ask before searching again.
 - `SEARCH_EXPIRED` (410): the 60-minute token is gone. Start a new search.
 - `MISSING_API_KEY` / `INVALID_API_KEY` (401): the key is missing or wrong.
-- `QUOTA_EXCEEDED` / `RATE_LIMIT_EXCEEDED` (429): stop and tell the user. Do not retry in a loop.
+- `QUOTA_EXCEEDED` (429): the month's allowance is gone. Stop, tell the user, and do not retry - it will not succeed again until the quota resets. `scripts/ktemia.py quota` still works and shows when that is.
+- `RATE_LIMIT_EXCEEDED` (429): too fast, not out of allowance. Wait for `Retry-After` and continue. Do not retry in a loop.
 
 Full list: https://www.ktemia.com/docs/api/#errors
 
@@ -117,6 +132,8 @@ curl https://api.ktemia.com/flights/search \
 
 curl "https://api.ktemia.com/flights/results?token=$TOKEN" -H "X-API-Key: $KTEMIA_API_KEY"
 curl "https://api.ktemia.com/flights/details?token=$TOKEN&resultId=$ID" -H "X-API-Key: $KTEMIA_API_KEY"
+
+curl "https://api.ktemia.com/key" -H "X-API-Key: $KTEMIA_API_KEY"
 ```
 
 ## Security

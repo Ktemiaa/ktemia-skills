@@ -7,6 +7,7 @@
     ktemia.py search --leg LIS:BCN:2027-04-02 --leg BCN:FCO:2027-04-06
     ktemia.py results TOKEN
     ktemia.py details TOKEN RESULT_ID
+    ktemia.py quota
 
 Reads the API key from KTEMIA_API_KEY. Prints JSON. Exits 1 on an API error.
 Reference: https://www.ktemia.com/docs/api/
@@ -171,11 +172,15 @@ def main():
     p.add_argument("result_id")
     p.add_argument("--raw", action="store_true", help="print the full response")
 
+    sub.add_parser("quota", help="plan, limits and requests left this month; costs no quota")
+
     args = parser.parse_args()
     if args.command == "airports":
         out = call("GET", "/flights/airports", {"query": args.query, "country": args.country})
     elif args.command == "airlines":
         out = call("GET", "/flights/airlines", {"query": args.query, "country": args.country})
+    elif args.command == "quota":
+        out = call("GET", "/key")
     elif args.command == "search":
         if not args.leg and not (args.origin and args.destination and args.date):
             parser.error("search needs --origin, --destination and --date, or two or more --leg")
