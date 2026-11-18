@@ -134,6 +134,7 @@ python3 skills/flight-search/scripts/ktemia.py quota
 
 **For agents and tools**
 
+- [MCP server](https://www.ktemia.com/docs/mcp/): the same searches as seven MCP tools, if your client prefers tools to skills. `npx -y @ktemia/mcp` ([npm](https://www.npmjs.com/package/@ktemia/mcp)) or `uvx ktemia-mcp` ([PyPI](https://pypi.org/project/ktemia-mcp/)), source at [Ktemiaa/ktemia-mcp](https://github.com/Ktemiaa/ktemia-mcp)
 - [OpenAPI 3.1 spec](https://www.ktemia.com/openapi.json) · [AGENTS.md](https://www.ktemia.com/AGENTS.md) · [llms.txt](https://www.ktemia.com/llms.txt)
 - [Public Postman collection](https://www.postman.com/ktemia-411711/ktemia-api/overview) with every endpoint and example
 - Rated **A (86)** on Postman's [AI-Ready API Score](https://www.postman.com/ai/ai-ready-apis/company/ktemia)
