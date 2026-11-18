@@ -88,7 +88,7 @@ The search returns a `searchToken`, valid for 60 minutes. It does not return car
 python3 scripts/ktemia.py results <searchToken>
 ```
 
-Up to 20 cars per page. Show the user a short list: car, class, passengers, agency, and price. `price` is the hire total. `perDay` is the daily price. If `nextToken` is present and the user wants more, call `results <nextToken>`.
+Up to 20 cars per page. Show the user a short list: car, class, passengers, agency, and price. `price` is the hire total, or the daily price if the search used `--price-mode perDay`. `perDay` is always the daily price. `--max-price` always caps the hire total. If `nextToken` is present and the user wants more, call `results <nextToken>`.
 
 The summary also lists `bookingSites` and `agencies`: the sellers and rental companies in this search, each with a count. Those ids are what `--providers` and `--agencies` take.
 
